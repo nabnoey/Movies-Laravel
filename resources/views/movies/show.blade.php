@@ -61,6 +61,35 @@
             <p class="text-muted">Released on: {{ $movie->release_date }}</p>
             <hr>
             <p>{{ $movie->description }}</p>
+
+            <!-- Trailer and Favorites Buttons -->
+            <div class="mt-3 d-flex align-items-center gap-2">
+                @if($movie->trailer_url)
+                    <a href="{{ route('movies.trailer', $movie->id) }}" class="btn btn-info">
+                        <i class="fas fa-play"></i> Watch Trailer
+                    </a>
+                @endif
+
+                @auth
+                    @if(auth()->user()->favoriteMovies->contains($movie))
+                        <form action="{{ route('movies.unfavorite', $movie) }}" method="POST" class="m-0">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Remove from Favorites</button>
+                        </form>
+                    @else
+                        <form action="{{ route('movies.favorite', $movie) }}" method="POST" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-success">Add to Favorites</button>
+                        </form>
+                    @endif
+                @endauth
+
+                @guest
+                    <a href="{{ route('login') }}" class="btn btn-secondary">Log in to Favorite</a>
+                @endguest
+            </div>
+
             <hr>
 
             <!-- Categories -->
@@ -72,27 +101,6 @@
             @else
                 <p>No categories assigned.</p>
             @endif
-
-            <!-- Favorites -->
-            <div class="mt-3">
-                @auth
-                    @if(auth()->user()->favoriteMovies->contains($movie))
-                        <form action="{{ route('movies.unfavorite', $movie) }}" method="POST" style="display:inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Remove from Favorites</button>
-                        </form>
-                    @else
-                        <form action="{{ route('movies.favorite', $movie) }}" method="POST" style="display:inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-success">Add to Favorites</button>
-                        </form>
-                    @endif
-                @endauth
-                @guest
-                    <p><a href="{{ route('login') }}">Log in</a> to add this movie to your favorites.</p>
-                @endguest
-            </div>
 
             <hr>
 
@@ -146,48 +154,53 @@
                 @endguest
 
                 <!-- Display Comments -->
-                @forelse ($movie->comments->sortByDesc('created_at') as $comment)
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h6 class="card-title fw-bold">{{ $comment->user->name }}</h6>
-                            <div class="static-rating mb-2">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    <span class="{{ $i <= $comment->rating ? 'filled' : '' }}">&#9733;</span>
-                                @endfor
-                            </div>
-                            <p class="card-text">{{ $comment->body }}</p>
-                            <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+                @auth
+                    @forelse ($movie->comments->sortByDesc('created_at') as $comment)
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold">{{ $comment->user->name }}</h6>
+                                <div class="static-rating mb-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <span class="{{ $i <= $comment->rating ? 'filled' : '' }}">&#9733;</span>
+                                    @endfor
+                                </div>
+                                <p class="card-text">{{ $comment->body }}</p>
+                                <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
 
-                            <div class="mt-2 flex items-center space-x-2">
-                                <!-- Like button -->
-                                @if(auth()->user()->role === 'user' && auth()->id() !== $comment->user_id)
-                                    <form action="{{ route('comments.like', $comment->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            👍 Like ({{ $comment->likes_count ?? 0 }})
-                                        </button>
-                                    </form>
-                                @endif
+                                <div class="mt-2 flex items-center space-x-2">
+                                    <!-- Like button -->
+                                    @if(auth()->user()->role === 'user' && auth()->id() !== $comment->user_id)
+                                        <form action="{{ route('comments.like', $comment->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                👍 Like ({{ $comment->likes_count ?? 0 }})
+                                            </button>
+                                        </form>
+                                    @endif
 
-                                <!-- Edit button -->
-                                @if(auth()->id() === $comment->user_id)
-                                    <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Edit</a>
-                                @endif
+                                    <!-- Edit button -->
+                                    @if(auth()->id() === $comment->user_id)
+                                        <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    @endif
 
-                                <!-- Delete button -->
-                                @if(auth()->user()->role === 'admin')
-                                    <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
-                                @endif
+                                    <!-- Delete button -->
+                                    @if(auth()->user()->role === 'admin')
+                                        <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    @endif
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @empty
-                    <p>ยังไม่มีความคิดเห็น</p>
-                @endforelse
+                    @empty
+                        <p>ยังไม่มีความคิดเห็น</p>
+                    @endforelse
+                @endauth
+                @guest
+                    <p><a href="{{ route('login') }}">เข้าสู่ระบบเพื่อดูความคิดเห็น</a></p>
+                @endguest
             </div>
         </div>
     </div>

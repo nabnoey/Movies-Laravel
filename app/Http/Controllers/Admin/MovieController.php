@@ -14,60 +14,49 @@ class MovieController extends Controller
         return view('admin.movies.index', compact('movies'));
     }
 
-    public function category($id) {
-        $category = Category::findOrFail($id);
-        $movies = $category->movies; // ดึงหนังในหมวด
-        return view('admin.category.show', compact('category', 'movies'));
-    }
-
-public function show($id)
-{
-    $movie = Movie::with('comments.user', 'categories')->findOrFail($id);
-    return view('movies.show', compact('movie'));
-}
-
-
-
     public function create() {
         $categories = Category::all();
         return view('admin.movies.create', compact('categories'));
     }
 
-   public function store(Request $request) {
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'poster_image_url' => 'nullable|string',
-        'release_date' => 'nullable|date',
-        'categories' => 'array', // ตรวจสอบว่า categories เป็น array
-    ]);
+    public function store(Request $request) {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'poster_image_url' => 'nullable|string',
+            'trailer_url' => 'nullable|string|url',
+            'release_date' => 'nullable|date',
+            'categories' => 'array',
+        ]);
 
-    $movie = Movie::create($request->only(['title', 'description', 'poster_image_url', 'release_date']));
-    $movie->categories()->sync($request->categories);
+        $movie = Movie::create($request->only(['title', 'description', 'poster_image_url', 'trailer_url', 'release_date']));
+        $movie->categories()->sync($request->categories);
 
-    return redirect()->route('admin.movies.index')->with('success', 'Movie created successfully.');
-}
+        return redirect()->route('admin.movies.index')->with('success', 'Movie created successfully.');
+    }
 
     public function edit($id) {
         $movie = Movie::findOrFail($id);
-        return view('admin.movies.edit', compact('movie'));
+        $categories = Category::all();
+        return view('admin.movies.edit', compact('movie','categories'));
     }
 
     public function update(Request $request, $id) {
-    $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'poster_image_url' => 'nullable|string',
-        'release_date' => 'nullable|date',
-        'categories' => 'array', // ตรวจสอบว่า categories เป็น array
-    ]);
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'poster_image_url' => 'nullable|string',
+            'trailer_url' => 'nullable|string|url',
+            'release_date' => 'nullable|date',
+            'categories' => 'array',
+        ]);
 
-    $movie = Movie::findOrFail($id);
-    $movie->update($request->only(['title', 'description', 'poster_image_url', 'release_date']));
-    $movie->categories()->sync($request->categories); // อัปเดตความสัมพันธ์หมวดหมู่
+        $movie = Movie::findOrFail($id);
+        $movie->update($request->only(['title', 'description', 'poster_image_url', 'trailer_url', 'release_date']));
+        $movie->categories()->sync($request->categories);
 
-    return redirect()->route('admin.movies.index')->with('success', 'Movie updated successfully.');
-}
+        return redirect()->route('admin.movies.index')->with('success', 'Movie updated successfully.');
+    }
 
     public function destroy($id) {
         $movie = Movie::findOrFail($id);

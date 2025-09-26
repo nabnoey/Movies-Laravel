@@ -19,7 +19,7 @@
             <table class="table table-striped table-hover mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th scope="col">#ID</th>
+                        <th scope="col">ID</th>
                         <th scope="col">Title</th>
                         <th scope="col">Description</th>
                         <th scope="col" class="text-center">Actions</th>
