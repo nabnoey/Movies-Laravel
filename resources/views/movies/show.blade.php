@@ -5,52 +5,49 @@
     /* Star Rating System */
     .rating {
         display: inline-block;
-        direction: rtl; /* Right-to-left to make stars fill from left-to-right */
-        border: none;
-        margin: 0;
-        padding: 0;
+        direction: rtl;
     }
     .rating > input {
-        display: none; /* Hide the actual radio buttons */
+        display: none;
     }
     .rating > label {
         font-size: 2rem;
-        color: #D3D3D3; /* Grey for empty stars */
+        color: #D3D3D3;
         cursor: pointer;
         transition: color 0.2s;
     }
-    /* On hover, light up this star and all previous ones */
     .rating > label:hover,
     .rating > label:hover ~ label {
-        color: #FFD700; /* Yellow on hover */
+        color: #FFD700;
     }
-    /* For selected star, light up this star and all previous ones */
     .rating > input:checked ~ label {
-        color: #FFD700; /* Yellow for selected */
+        color: #FFD700;
     }
 
     /* Static Star Display */
     .static-rating {
         font-size: 1.2rem;
-        color: #D3D3D3; /* Default empty star color */
+        color: #D3D3D3;
     }
     .static-rating .filled {
-        color: #FFD700; /* Yellow for filled stars */
+        color: #FFD700;
     }
     .avg-rating-display {
         font-size: 1.5rem;
     }
 </style>
 
-<div class="container">
+<div class="container mt-4">
     <div class="row">
+        <!-- Poster -->
         <div class="col-md-4">
             <img src="{{ $movie->poster_image_url }}" class="img-fluid rounded" alt="{{ $movie->title }}">
         </div>
-        <div class="col-md-8">
-            <h1>{{ $movie->title }}</h1>
 
-            <!-- Average Rating -->
+        <!-- Movie Info -->
+        <div class="col-md-8">
+            <h1 class="fw-bold">{{ $movie->title }}</h1>
+
             @php
                 $averageRating = $movie->comments->avg('rating');
             @endphp
@@ -65,7 +62,8 @@
             <hr>
             <p>{{ $movie->description }}</p>
             <hr>
-            
+
+            <!-- Categories -->
             <h5>Categories:</h5>
             @if($movie->categories->count() > 0)
                 @foreach($movie->categories as $category)
@@ -75,7 +73,8 @@
                 <p>No categories assigned.</p>
             @endif
 
-            <div class="mt-4">
+            <!-- Favorites -->
+            <div class="mt-3">
                 @auth
                     @if(auth()->user()->favoriteMovies->contains($movie))
                         <form action="{{ route('movies.unfavorite', $movie) }}" method="POST" style="display:inline;">
@@ -101,12 +100,12 @@
             <div class="mt-5">
                 <h4>Comments</h4>
 
+                <!-- Add Comment -->
                 @auth
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">แสดงความคิดเห็น</h5>
 
-                        <!-- Validation Errors -->
                         @if ($errors->any())
                             <div class="alert alert-danger">
                                 <ul class="mb-0">
@@ -120,22 +119,22 @@
                         <form action="{{ route('comments.store') }}" method="POST">
                             @csrf
                             <input type="hidden" name="movie_id" value="{{ $movie->id }}">
-                            
-                            <!-- Rating Input -->
+
+                            <!-- Rating -->
                             <div class="mb-3">
                                 <label class="form-label">ให้คะแนน:</label>
                                 <div class="rating">
-                                    <input type="radio" id="star5" name="rating" value="5" required /><label for="star5" title="5 stars">&#9733;</label>
-                                    <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stars">&#9733;</label>
-                                    <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stars">&#9733;</label>
-                                    <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stars">&#9733;</label>
-                                    <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 star">&#9733;</label>
+                                    @for($i = 5; $i >= 1; $i--)
+                                        <input type="radio" id="star{{$i}}" name="rating" value="{{$i}}" required>
+                                        <label for="star{{$i}}" title="{{$i}} stars">&#9733;</label>
+                                    @endfor
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <textarea class="form-control" name="body" rows="3" placeholder="เขียนคอมเมนต์..." required></textarea>
                             </div>
+
                             <button type="submit" class="btn btn-primary">ส่งความคิดเห็น</button>
                         </form>
                     </div>
@@ -146,6 +145,7 @@
                     <p><a href="{{ route('login') }}">เข้าสู่ระบบเพื่อแสดงความคิดเห็น</a></p>
                 @endguest
 
+                <!-- Display Comments -->
                 @forelse ($movie->comments->sortByDesc('created_at') as $comment)
                     <div class="card mb-3">
                         <div class="card-body">
@@ -157,6 +157,32 @@
                             </div>
                             <p class="card-text">{{ $comment->body }}</p>
                             <small class="text-muted">{{ $comment->created_at->format('d/m/Y H:i') }}</small>
+
+                            <div class="mt-2 flex items-center space-x-2">
+                                <!-- Like button -->
+                                @if(auth()->user()->role === 'user' && auth()->id() !== $comment->user_id)
+                                    <form action="{{ route('comments.like', $comment->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            👍 Like ({{ $comment->likes_count ?? 0 }})
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <!-- Edit button -->
+                                @if(auth()->id() === $comment->user_id)
+                                    <a href="{{ route('comments.edit', $comment->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                @endif
+
+                                <!-- Delete button -->
+                                @if(auth()->user()->role === 'admin')
+                                    <form action="{{ route('comments.destroy', $comment->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @empty

@@ -90,5 +90,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
- 
+    // Like comment
+    Route::post('/comments/{comment}/like', [CommentController::class, 'like'])->name('comments.like');
 });

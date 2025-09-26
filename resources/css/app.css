@@ -10,7 +10,3 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 @plugin 'daisyui';
-
-select[multiple] {
-    height: auto !important;
-}

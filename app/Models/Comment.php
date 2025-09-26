@@ -9,16 +9,15 @@ class Comment extends Model
 {
     use HasFactory;
 
-    // กำหนด column ที่สามารถ mass assign ได้
     protected $fillable = [
         'user_id',
         'movie_id',
         'body',
         'rating',
+        'likes_count',
     ];
 
-    // ความสัมพันธ์กับ User
-  public function user()
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
@@ -26,5 +25,11 @@ class Comment extends Model
     public function movie()
     {
         return $this->belongsTo(Movie::class);
+    }
+
+    // Helper: ตรวจสอบว่า user สามารถแก้ไข comment นี้ได้
+    public function isEditableBy($user)
+    {
+        return $user->role === 'admin' || $this->user_id === $user->id;
     }
 }
