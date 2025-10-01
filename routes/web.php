@@ -16,10 +16,8 @@ use App\Models\Category;
 | หน้าแรก
 |--------------------------------------------------------------------------
 */
-Route::get('/', function () {
-    $movies = Movie::all(); 
-    return view('home', compact('movies'));
-})->name('home');
+Route::get('/', [MovieController::class, 'home'])->name('home');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -97,12 +95,19 @@ Route::middleware('auth')->group(function () {
 
     // Like comment
     Route::post('/comments/{comment}/like', [CommentController::class, 'like'])->name('comments.like');
+
+    // Profile Routes
+    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 });
 
 // Public movies
 Route::get('/movies', [MovieController::class, 'index'])->name('movies.list');
 Route::get('/movies/{id}', [MovieController::class, 'show'])->name('movies.show');
 Route::get('/movies/{id}/trailer', [MovieController::class, 'trailer'])->name('movies.trailer');
+
+// API for live search
+Route::get('/api/movies/search', [MovieController::class, 'search'])->name('movies.search');
 
 // Admin movies (ต้อง login)
 Route::prefix('admin')->middleware('auth')->name('admin.')->group(function () {

@@ -9,6 +9,19 @@ use App\Models\Category;
 
 class MovieController extends Controller
 {
+    public function home(Request $request)
+    {
+        $query = $request->input('search');
+
+        if ($query) {
+            $movies = Movie::where('title', 'like', "%{$query}%")->get();
+        } else {
+            $movies = Movie::all();
+        }
+
+        return view('home', compact('movies'));
+    }
+
     // แสดงรายการหนังทั้งหมด
     public function index()
     {
@@ -44,5 +57,12 @@ class MovieController extends Controller
         }
         preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $url, $match);
         return $match[1] ?? null;
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        $movies = Movie::where('title', 'like', "%{$query}%")->get();
+        return response()->json($movies);
     }
 }

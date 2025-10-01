@@ -9,18 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('comments', function (Blueprint $table) {
-            if (!Schema::hasColumn('comments', 'likes_count')) {
-                $table->unsignedInteger('likes_count')->default(0)->after('rating');
-            }
+            $table->unsignedBigInteger('user_id')->after('id');
+
+            // ถ้ามีตาราง users อยู่แล้ว สามารถใส่ foreign key ด้วย
+            // $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
         Schema::table('comments', function (Blueprint $table) {
-            if (Schema::hasColumn('comments', 'likes_count')) {
-                $table->dropColumn('likes_count');
-            }
+            $table->dropColumn('user_id');
         });
     }
 };
