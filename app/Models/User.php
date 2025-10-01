@@ -29,6 +29,20 @@ class User extends Authenticatable
     ];
 
     /**
+     * Get the URL for the user's profile image.
+     *
+     * @return string
+     */
+    public function getProfileImageUrlAttribute()
+    {
+        if ($this->profile_image) {
+            return \Illuminate\Support\Facades\Storage::url($this->profile_image);
+        }
+
+        return 'https://via.placeholder.com/50'; // Default image
+    }
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
